@@ -13,9 +13,6 @@ firebase.initializeApp(config);
 
 var database = firebase.database();
 // When form is submitted take the data and push it to the database
-$(document).ready(function(){
-  updateDisplay();
-});
 
 function writeUserData(name, dest, firstT, freq) {
   firebase.database().ref().push({
@@ -39,18 +36,30 @@ $("#addButton").click(function() {
   $("#destination").val("");
   $("#firstTime").val("");
   $("#frequency").val("");
-  updateDisplay();
+  $("trainsInfo").empty();
+
 });
 // When database is updated then update the table to relect the changes
-var updateDisplay = function() {
-  database.ref().on('child_added', function(snapshot) {
+    database.ref().on('child_added', function(snapshot) {
     var data = snapshot.val();
-    console.log(snapshot.val());
+
+    var firstTimeConverted = moment(data.first_train_time, "hh:mm").subtract(1, "day");
+
+    var diffTime = moment().diff(moment(firstTimeConverted), "minutes");
+
+    var remainder =  diffTime%data.frequency;
+
+    var timeRemaining = data.frequency-remainder;
+
+    var nextTime = moment().add(timeRemaining, "minutes").format("hh:mm");
+    
     var row = $("<tr>");
-    var c1 = data.train_name;
-    var c2 = data.destination;
-    var c3 = data.first_train_time;
-    var c4;
-    var c5;
+    var c1 = $("<td>").text(data.train_name);
+    var c2 = $("<td>").text(data.destination);
+    var c3 = $("<td>").text(data.frequency);
+    var c4 = $("<td>").text(nextTime);
+    var c5 = $("<td>").text(timeRemaining);
+    $(row).append(c1, c2, c3, c4, c5);
+    $("#trainsInfo").append(row);
+
   });
-}
